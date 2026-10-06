@@ -1,0 +1,53 @@
+version: 2
+
+# GoReleaser configuration for k8s-controller-kit
+# See: https://goreleaser.com
+#
+# k8s-controller-kit is a library: consumers `go get` it by tag, and the Go checksum
+# database already pins what each tag contains. Nothing is built. What a
+# release adds is a GitHub release carrying the tagged source, a signed
+# checksums.txt over it, and build provenance (attached by release.yml), so
+# the tree a tag names can be verified without trusting this repository.
+project_name: k8s-controller-kit
+
+builds:
+  - skip: true
+
+# No binary archives — only the source one below.
+archives: []
+
+source:
+  enabled: true
+  name_template: '{{ .ProjectName }}-{{ .Version }}'
+  format: tar.gz
+
+checksum:
+  name_template: 'checksums.txt'
+
+# Keyless cosign signatures, from the release workflow's own GitHub identity:
+# no key to store or leak, and the certificate names the exact workflow and tag
+# that produced the release. Signing checksums.txt covers the source archive,
+# since it lists its digest. See SECURITY.md for how to verify.
+signs:
+  - cmd: cosign
+    signature: "${artifact}.sigstore.json"
+    args:
+      - sign-blob
+      - "--bundle=${signature}"
+      - "${artifact}"
+      - "--yes"
+    artifacts: checksum
+
+# The notes are the tag's CHANGELOG.md section, passed by release.yml with
+# --release-notes, which replaces the generated commit list. Do not set
+# `changelog.disable`: it skips the stage that reads --release-notes too
+# (tuikit v0.0.18 went out with empty notes because of it).
+
+release:
+  draft: false
+  replace_existing_draft: true
+  target_commitish: "{{ .Commit }}"
+  prerelease: auto
+  mode: replace
+  footer: |
+    **Full Changelog**: https://github.com/blairham/k8s-controller-kit/compare/{{ .PreviousTag }}...{{ .Tag }}

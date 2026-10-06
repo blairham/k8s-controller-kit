@@ -1,0 +1,39 @@
+name: Bug report
+description: Something the kit did, or failed to do, to a resource or its target
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: k8s-controller-kit version
+      description: The version in your go.mod, or a commit.
+    validations:
+      required: true
+  - type: input
+    id: runtime
+    attributes:
+      label: controller-runtime and Kubernetes versions
+      description: e.g. controller-runtime v0.25.1 against Kubernetes 1.35.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Package
+      options:
+        - plan (ordering, dependencies, outputs, Describe/Hash)
+        - reconciler (conditions, status, finalizer, metrics)
+        - reconciler (ownership and pruning)
+        - secret
+        - manager
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect instead?
+      description: Include the resource's status (conditions, pending) and the controller's log lines if you have them.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: A test against controller-runtime's fake client, or a short plan, that shows it.
+      render: go

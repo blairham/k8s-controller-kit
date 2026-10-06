@@ -1,0 +1,16 @@
+name: Feature request
+description: Something the kit should provide
+labels: [enhancement]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What would you like a controller to be able to do?
+      description: The task, not the implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why does it belong in the kit?
+      description: Which controllers need it, and what they do today instead. Something only one controller needs, or anything that names a domain concept (a role, an ACL, a load balancer), belongs in that controller.
