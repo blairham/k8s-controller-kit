@@ -124,10 +124,15 @@ is removed.
 
 ## Status
 
-Prepared for publication at `github.com/blairham/k8s-controller-kit` but not
-yet pushed. Until it is, consumers reference it with a `replace` directive;
-`database-controller` moves onto it after publication, since its CI cannot
-resolve a local path. Once public, `main` gets a repository ruleset like
-tuikit's: squash-only, signed commits, linear history, stale reviews
-dismissed, the CI and CodeQL checks required on an up-to-date branch, and no
-bypass.
+Public at `github.com/blairham/k8s-controller-kit` since 2026-10-06. `main` is
+guarded by repository ruleset 24590996, not classic branch protection
+(Scorecard cannot read classic protection with its token): squash-only PRs,
+signed commits, linear history, stale reviews dismissed, resolved review
+threads, and **Pre-commit**, **Detect changed files**, **Build and test** and
+**Analyze** required on a branch up to date with `main`. Nobody bypasses it,
+admins included; every change, a release's CHANGELOG move too, lands as a
+PR. Tags are not covered, so `git push origin vX.Y.Z` still works.
+
+No release is tagged yet; the first is `v0.0.0`. Until then, consumers
+(kafka-controller) use a `replace` directive; `database-controller` moves
+onto the kit once it is tagged.
