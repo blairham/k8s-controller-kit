@@ -370,6 +370,54 @@ func TestFatalApplyFailsTheReconcile(t *testing.T) {
 	}
 }
 
+// A failed reconcile moves ObservedGeneration to the new generation, so nothing
+// on the status may still carry the previous generation's plan. Before this,
+// Converged=False and Pending kept naming a refusal the new spec no longer
+// asked for, and a client waiting on ObservedGeneration read it as current.
+func TestFailureDoesNotLeaveThePreviousGenerationsPlan(t *testing.T) {
+	t.Parallel()
+	h := newHarness(t, &widget{Spec: widgetSpec{Want: []string{"a", "soft-b"}}})
+	h.t.refuse["soft-b"] = true
+	if _, err := h.reconcile(t); err != nil {
+		t.Fatal(err)
+	}
+	if w := h.get(
+		t,
+	); len(w.Status.Pending) != 1 ||
+		cond(t, w, reconciler.ConditionConverged).Status != metav1.ConditionFalse {
+		t.Fatalf("setup: want soft-b pending, got %+v", w.Status)
+	}
+
+	w := h.get(t)
+	w.Spec.Want = []string{"a", "c"}
+	w.Generation++
+	if err := h.c.Update(context.Background(), w); err != nil {
+		t.Fatal(err)
+	}
+	h.t.refuse["c"] = true
+	if _, err := h.reconcile(t); err == nil {
+		t.Fatal("want the fatal apply of c to fail the reconcile")
+	}
+
+	w = h.get(t)
+	if w.Status.ObservedGeneration != w.Generation {
+		t.Fatalf("observedGeneration = %d, want %d", w.Status.ObservedGeneration, w.Generation)
+	}
+	if c := cond(t, w, reconciler.ConditionReady); c.Status != metav1.ConditionFalse || c.Reason != "ApplyFailed" {
+		t.Errorf("Ready = %+v", c)
+	}
+	if c := cond(t, w, reconciler.ConditionConverged); c.Status != metav1.ConditionUnknown ||
+		c.ObservedGeneration != w.Generation || strings.Contains(c.Message, "soft-b") {
+		t.Errorf("Converged = %+v, want Unknown for this generation", c)
+	}
+	if w.Status.PendingCount != 0 || len(w.Status.Pending) != 0 {
+		t.Errorf("pending = %d %v, want none: no plan for this generation succeeded", w.Status.PendingCount, w.Status.Pending)
+	}
+	if len(w.Status.Warnings) != 0 {
+		t.Errorf("warnings = %v, want none: they named the previous generation's refusal", w.Status.Warnings)
+	}
+}
+
 func TestPlanErrorIsPlanFailed(t *testing.T) {
 	t.Parallel()
 	h := newHarness(t, &widget{Spec: widgetSpec{Want: []string{"a"}}})
