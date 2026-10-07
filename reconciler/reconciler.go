@@ -421,6 +421,23 @@ func (r *Reconciler[T]) fail(ctx context.Context, obj T, reason string, cause er
 		Message:            cause.Error(),
 		ObservedGeneration: obj.GetGeneration(),
 	})
+	// ObservedGeneration moves to this generation below, so every field that
+	// claims to describe the CURRENT spec must be rewritten here too, or it
+	// keeps an older generation's answer under the new generation's number.
+	// Converged and Pending are plan results for this spec, and no plan for it
+	// succeeded: Unknown, and nothing listed. Warnings are per-apply, as
+	// observe treats them, and no apply for this spec completed: none.
+	// LastAppliedTime and AppliedPlanHash are history and stay.
+	apimeta.SetStatusCondition(st.Conditions, metav1.Condition{
+		Type:               ConditionConverged,
+		Status:             metav1.ConditionUnknown,
+		Reason:             reason,
+		Message:            "not known: the last reconcile failed (see Ready)",
+		ObservedGeneration: obj.GetGeneration(),
+	})
+	*st.PendingCount = 0
+	*st.Pending = nil
+	*st.Warnings = nil
 	*st.ObservedGeneration = obj.GetGeneration()
 
 	if err := r.Client.Status().Update(ctx, obj); err != nil {
