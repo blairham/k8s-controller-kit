@@ -8,6 +8,22 @@ Pre-stable releases (`v0.x.y`) make no API-stability promise -- breaking changes
 
 ## [Unreleased]
 
+## [0.0.1] - 2026-10-07
+
+### Fixed
+
+- `reconciler`: a failed reconcile no longer reports an older generation's
+  plan as current. `fail()` advances `observedGeneration`, and now also sets
+  `Converged` to `Unknown` for that generation and clears `pending`,
+  `pendingCount` and `warnings`. Before, a client waiting on
+  `observedGeneration == generation` read the previous spec's refusals as the
+  cause of the new failure (#7).
+
+### Changed
+
+- Dependencies: `sigs.k8s.io/controller-runtime` v0.25.1 → v0.25.2,
+  `github.com/prometheus/client_golang` v1.24.0 → v1.24.1.
+
 ## [0.0.0] - 2026-10-06
 
 ### Added
