@@ -77,7 +77,7 @@ inventory pruning trusts.
 
 ## Used by
 
-- [database-controller](https://github.com/blairham/database-controller) --
+- [database-access-controller](https://github.com/blairham/database-access-controller) --
   PostgreSQL roles, schemas and grants (moving onto the kit)
 - kafka-controller -- Kafka topics, ACLs and SCRAM credentials
 

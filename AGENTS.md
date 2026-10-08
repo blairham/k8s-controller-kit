@@ -6,7 +6,7 @@ other tools read this file directly.
 ## Project Overview
 
 Shared building blocks for blairham's **plan-driven** Kubernetes controllers
-(`database-controller`, `kafka-controller`, ...): each reads a target system,
+(`database-access-controller`, `kafka-controller`, ...): each reads a target system,
 plans the difference from a resource's spec, and either applies it (Enforce)
 or records it in status (Observe).
 
@@ -134,5 +134,5 @@ admins included; every change, a release's CHANGELOG move too, lands as a
 PR. Tags are not covered, so `git push origin vX.Y.Z` still works.
 
 No release is tagged yet; the first is `v0.0.0`. Until then, consumers
-(kafka-controller) use a `replace` directive; `database-controller` moves
+(kafka-controller) use a `replace` directive; `database-access-controller` moves
 onto the kit once it is tagged.
