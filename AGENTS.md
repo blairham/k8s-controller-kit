@@ -30,12 +30,19 @@ Read `.claude/commands/release-tag.md` before cutting one.
 Apache-2.0 with a CLA (`CLA.md`); every `.go` file carries the two-line SPDX
 header.
 
-- `.github/workflows/ci.yml` -- pre-commit (the lint surface) and build +
-  race tests, which also run the fuzz seeds and the `Example` tests. CodeQL
-  (`codeql.yml`, `security-extended`) and OpenSSF Scorecard (`scorecard.yml`)
-  run alongside. Every action is pinned by commit SHA with a `# vX.Y.Z`
-  comment, workflows are read-only by default, and Dependabot bumps the pins
-  and the Go modules monthly (the Kubernetes modules as one group).
+- **Shared baseline.** CI, release and the synced config files come from
+  [blairham/.github](https://github.com/blairham/.github).
+  `.github/workflows/ci.yml` calls its `go-ci.yml` (Pre-commit, Detect
+  changed files, Build and test, and Fuzz on main and weekly) and
+  `release.yml` calls its `go-release.yml`, both pinned by commit SHA.
+  `.golangci.yml`, `.editorconfig`, `.pre-commit-config.yaml`,
+  `.yamllint.yml`, `.gitleaks.toml`, `.github/dependabot.yml`,
+  `.github/CODEOWNERS`, `scorecard.yml` and `codeql.yml` are rendered there
+  by `make sync REPO=k8s-controller-kit DIR=<checkout>`: change them in
+  blairham/.github, not here, or the weekly drift check reports it. Every
+  action is pinned by commit SHA with a `# vX.Y.Z` comment, workflows are
+  read-only by default, and Dependabot bumps the pins and the Go modules
+  monthly (the Kubernetes modules as one group).
 - Fuzz targets: `plan/plan_fuzz_test.go` (any graph: order, skip rule, an
   invalid graph runs nothing) and `reconciler/inventory_fuzz_test.go` (the
   set arithmetic pruning rests on). Each checks a property, and each has
