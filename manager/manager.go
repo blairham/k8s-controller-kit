@@ -43,7 +43,7 @@ type Config struct {
 	// default.
 	Controllers map[string]Controller
 
-	// LeaderElectionID is the lease name, such as "database-controller.io".
+	// LeaderElectionID is the lease name, such as "database-access-controller.io".
 	LeaderElectionID string
 }
 
