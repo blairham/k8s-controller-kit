@@ -52,26 +52,38 @@ git fetch --tags https://github.com/blairham/k8s-controller-kit
 git verify-tag v0.0.1
 ```
 
-Each tag also has a GitHub release built by `.github/workflows/release.yml`:
-the tagged source as `k8s-controller-kit-X.Y.Z.tar.gz`, a `checksums.txt`
-signed with [cosign](https://github.com/sigstore/cosign) keyless signing --
-tied to the workflow that built it, not to a key someone could leak -- and
-SLSA build provenance for the archive. Verify the signature, then the
-archive against it, then the provenance:
+Each tag also has a GitHub release built by `.github/workflows/release.yml`,
+which runs the shared release workflow in
+[blairham/.github](https://github.com/blairham/.github)
+(`.github/workflows/go-release.yml`): the tagged source as
+`k8s-controller-kit-X.Y.Z.tar.gz`, a `checksums.txt` signed with
+[cosign](https://github.com/sigstore/cosign) keyless signing -- tied to the
+workflow that built it, not to a key someone could leak -- and SLSA build
+provenance for the archive. The signing identity is that shared workflow;
+the certificate also names this repository and the tag. Verify the
+signature, then the archive against it, then the provenance:
 
 ```sh
-VERSION=v0.0.1
+VERSION=v0.0.2
 cosign verify-blob \
-  --certificate-identity "https://github.com/blairham/k8s-controller-kit/.github/workflows/release.yml@refs/tags/$VERSION" \
+  --certificate-identity-regexp '^https://github\.com/blairham/\.github/\.github/workflows/go-release\.yml@' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --certificate-github-workflow-repository blairham/k8s-controller-kit \
+  --certificate-github-workflow-ref "refs/tags/$VERSION" \
   --bundle checksums.txt.sigstore.json checksums.txt
 sha256sum --check --ignore-missing checksums.txt
-gh attestation verify "k8s-controller-kit-${VERSION#v}.tar.gz" --repo blairham/k8s-controller-kit
+gh attestation verify "k8s-controller-kit-${VERSION#v}.tar.gz" --repo blairham/k8s-controller-kit \
+  --signer-workflow blairham/.github/.github/workflows/go-release.yml
 ```
 
 The provenance bundle is also attached to the release as
 `k8s-controller-kit-$VERSION.intoto.jsonl`, for checking offline with
 `gh attestation verify --bundle`.
+
+**Tags released before the move to blairham/.github** (v0.0.1 and earlier)
+were signed by this repository's own `release.yml`. Verify those with
+`--certificate-identity "https://github.com/blairham/k8s-controller-kit/.github/workflows/release.yml@refs/tags/$VERSION"`
+in place of the two identity flags above, and without `--signer-workflow`.
 
 ## Reporting a vulnerability
 

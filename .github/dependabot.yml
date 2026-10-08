@@ -1,4 +1,8 @@
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# Rendered from blairham/.github baseline/dependabot.yml.tmpl by `make sync`.
+# Groups are derived from go.mod: a group appears when the module requires
+# something it covers. The docker ecosystem appears when there is a Dockerfile.
 version: 2
 updates:
   - package-ecosystem: gomod
@@ -7,10 +11,14 @@ updates:
       interval: monthly
     open-pull-requests-limit: 10
     groups:
-      # client-go, apimachinery, api and controller-runtime are released
-      # against each other; a lone bump breaks the build.
+      # client-go, api and apimachinery move in lockstep with each other and
+      # with controller-runtime; split, they fail to build.
       kubernetes:
-        patterns: ["k8s.io/*", "sigs.k8s.io/*"]
+        patterns:
+          - "k8s.io/*"
+          - "sigs.k8s.io/*"
+  # Bumps the SHA pins and their `# vX.Y.Z` comments together, including the
+  # pin on blairham/.github's reusable workflows.
   - package-ecosystem: github-actions
     directory: /
     schedule:

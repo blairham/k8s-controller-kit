@@ -1,6 +1,11 @@
 # golangci-lint v2 configuration for k8s-controller-kit.
 # See: https://golangci-lint.run/usage/configuration/
 #
+# Rendered from blairham/.github baseline/golangci.yml.tmpl by `make sync`.
+# Edit the baseline (or, with a reason, the override file
+# overrides/k8s-controller-kit.yml), not this file: the weekly drift check
+# reports any difference.
+#
 # golangci-lint is pinned twice and the two must move together: go.mod's `tool`
 # block (`go tool golangci-lint`) and the hook `rev` in .pre-commit-config.yaml.
 
