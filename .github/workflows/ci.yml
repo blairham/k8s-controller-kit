@@ -3,9 +3,10 @@ name: CI
 # Everything that gates a merge. The jobs themselves — Pre-commit, Detect
 # changed files, Build and test, Fuzz — are blairham/.github's go-ci.yml,
 # shared with every Go repository there; their checks report as
-# `CI / <job>`. Repository-specific jobs go below, `needs: ci`, with their
-# steps gated on `needs.ci.outputs.code == 'true'` (never a job-level `if:`
-# or a `paths:` filter: a required check that never runs is pending forever).
+# `CI / <job>`. Repository-specific jobs go below, `needs: changes` (a
+# go-changes.yml call at the same pin), with their steps gated on
+# `needs.changes.outputs.code == 'true'` (never a job-level `if:` or a
+# `paths:` filter: a required check that never runs is pending forever).
 on:
   pull_request:
     types: [opened, reopened, synchronize, ready_for_review]
@@ -31,4 +32,4 @@ concurrency:
 jobs:
   ci:
     name: CI
-    uses: blairham/.github/.github/workflows/go-ci.yml@99060d62d0693570a360127ab698307d276630da # v0.0.0
+    uses: blairham/.github/.github/workflows/go-ci.yml@9711060ad4860f35860bcbf90d90f103617082d2 # v0.0.1
