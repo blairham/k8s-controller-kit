@@ -14,7 +14,6 @@ import (
 	"k8s.io/client-go/rest"
 	toolscache "k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/events"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/cache/informertest"
@@ -63,12 +62,13 @@ func TestSetupReconcilesOnlyOnAGenerationChange(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	skipNameValidation := true
 	r := &reconciler.Reconciler[*widget]{
 		Client:   c,
 		Recorder: events.NewFakeRecorder(10),
 		Name:     "widget-setup",
 		New:      func() *widget { return &widget{} },
-		Options:  controller.Options{SkipNameValidation: ptr.To(true)},
+		Options:  controller.Options{SkipNameValidation: &skipNameValidation},
 	}
 	if err := r.SetupWithManager(mgr); err != nil {
 		t.Fatal(err)
