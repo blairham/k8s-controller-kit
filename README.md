@@ -49,7 +49,7 @@ kit type.
 ```go
 r := &reconciler.Reconciler[*v1alpha1.Widget]{
     Client:         mgr.GetClient(),
-    Recorder:       mgr.GetEventRecorderFor("widget"),
+    Recorder:       mgr.GetEventRecorder("widget"),
     Name:           "widget",
     New:            func() *v1alpha1.Widget { return &v1alpha1.Widget{} },
     Open:           openSession, // your engine, bound to one resource

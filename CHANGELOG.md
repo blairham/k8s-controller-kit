@@ -8,6 +8,15 @@ Pre-stable releases (`v0.x.y`) make no API-stability promise -- breaking changes
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** `reconciler.Reconciler.Recorder` is now a
+  `k8s.io/client-go/tools/events.EventRecorder` (the events.k8s.io API), not a
+  `record.EventRecorder`. Pass `mgr.GetEventRecorder(name)` instead of the
+  deprecated `mgr.GetEventRecorderFor(name)`; a test fake is
+  `events.NewFakeRecorder`. Events now carry an action: `Apply` for
+  `PartiallyApplied`, `Reconcile` for a failed reconcile (#6).
+
 ## [0.0.1] - 2026-10-07
 
 ### Fixed

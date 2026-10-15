@@ -17,7 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -163,6 +163,7 @@ type harness struct {
 	t       *target
 	reg     *prometheus.Registry
 	metrics *reconciler.Metrics
+	events  *events.FakeRecorder
 }
 
 const finalizer = "test.k8s-controller-kit.io/revoke"
@@ -178,9 +179,10 @@ func newHarness(tb testing.TB, w *widget) *harness {
 	tgt := &target{have: map[string]bool{}, refuse: map[string]bool{}}
 	reg := prometheus.NewRegistry()
 	m := reconciler.NewMetrics(reg, reconciler.MetricsConfig{Prefix: "test", Kind: "Widget", Noun: "operation"})
+	rec := events.NewFakeRecorder(100)
 	r := &reconciler.Reconciler[*widget]{
 		Client:   c,
-		Recorder: record.NewFakeRecorder(100),
+		Recorder: rec,
 		Name:     "widget",
 		New:      func() *widget { return &widget{} },
 		Open: func(_ context.Context, w *widget) (reconciler.Session, error) {
@@ -212,7 +214,7 @@ func newHarness(tb testing.TB, w *widget) *harness {
 		Noun:      "operation",
 		Target:    "cluster",
 	}
-	return &harness{c: c, r: r, t: tgt, reg: reg, metrics: m}
+	return &harness{c: c, r: r, t: tgt, reg: reg, metrics: m, events: rec}
 }
 
 func (h *harness) reconcile(tb testing.TB) (ctrl.Result, error) {
@@ -221,6 +223,19 @@ func (h *harness) reconcile(tb testing.TB) (ctrl.Result, error) {
 		context.Background(),
 		ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "ns", Name: "w"}},
 	)
+}
+
+// emitted drains the events recorded so far.
+func (h *harness) emitted() []string {
+	var got []string
+	for {
+		select {
+		case e := <-h.events.Events:
+			got = append(got, e)
+		default:
+			return got
+		}
+	}
 }
 
 func (h *harness) get(tb testing.TB) *widget {
@@ -351,6 +366,10 @@ func TestBestEffortFailureIsAWarningAndStaysPending(t *testing.T) {
 	if got := gauge(t, h.reg, "test_access_warnings"); got != 1 {
 		t.Errorf("warnings gauge = %v", got)
 	}
+	if got := h.emitted(); len(got) != 1 ||
+		got[0] != "Warning PartiallyApplied 1 best-effort operation(s) were skipped (see status.warnings)" {
+		t.Errorf("events = %q", got)
+	}
 }
 
 func TestFatalApplyFailsTheReconcile(t *testing.T) {
@@ -367,6 +386,9 @@ func TestFatalApplyFailsTheReconcile(t *testing.T) {
 	}
 	if got := gauge(t, h.reg, "test_access_ready"); got != 0 {
 		t.Errorf("ready gauge = %v, want 0", got)
+	}
+	if got := h.emitted(); len(got) != 1 || !strings.HasPrefix(got[0], "Warning ApplyFailed ") {
+		t.Errorf("events = %q", got)
 	}
 }
 
