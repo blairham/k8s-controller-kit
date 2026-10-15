@@ -16,7 +16,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -80,7 +80,7 @@ type Status struct {
 // such as *v1alpha1.DatabaseAccess.
 type Reconciler[T client.Object] struct {
 	Client   client.Client
-	Recorder record.EventRecorder
+	Recorder events.EventRecorder
 
 	// RevokeOnDelete reports whether deleting obj should run its revoke plan.
 	RevokeOnDelete func(obj T) bool
@@ -210,7 +210,7 @@ func (r *Reconciler[T]) enforce(ctx context.Context, obj T, s Session, p *plan.P
 		"steps", res.Applied, "warnings", len(res.Warnings), "hash", hash)
 
 	if len(res.Warnings) > 0 {
-		r.Recorder.Eventf(obj, "Warning", "PartiallyApplied",
+		r.Recorder.Eventf(obj, nil, "Warning", "PartiallyApplied", "Apply",
 			"%d best-effort %s(s) were skipped (see status.warnings)", len(res.Warnings), r.noun())
 	}
 
@@ -443,7 +443,7 @@ func (r *Reconciler[T]) fail(ctx context.Context, obj T, reason string, cause er
 	if err := r.Client.Status().Update(ctx, obj); err != nil {
 		return fmt.Errorf("updating status after %s: %w (original error: %w)", reason, err, cause)
 	}
-	r.Recorder.Event(obj, "Warning", reason, cause.Error())
+	r.Recorder.Eventf(obj, nil, "Warning", reason, "Reconcile", "%s", cause.Error())
 	return cause
 }
 
