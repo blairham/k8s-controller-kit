@@ -17,6 +17,17 @@ Pre-stable releases (`v0.x.y`) make no API-stability promise -- breaking changes
   `events.NewFakeRecorder`. Events now carry an action: `Apply` for
   `PartiallyApplied`, `Reconcile` for a failed reconcile (#6).
 
+### Fixed
+
+- `reconciler`: an idle resource is no longer re-planned and re-applied
+  continuously. `SetupWithManager` reconciled on every watch event, including
+  the reconciler's own status write, so with a realistic plan latency a
+  resource hit its target about once a second instead of once per
+  `DriftInterval`. The primary watch now filters on
+  `GenerationChangedPredicate`: a spec change or a deletion still reconciles
+  at once; an edit to only labels, annotations or status waits for the drift
+  interval (#21).
+
 ## [0.0.1] - 2026-10-07
 
 ### Fixed

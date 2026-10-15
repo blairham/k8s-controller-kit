@@ -19,10 +19,12 @@ import (
 	"k8s.io/client-go/tools/events"
 	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	"github.com/blairham/k8s-controller-kit/plan"
 )
@@ -448,9 +450,15 @@ func (r *Reconciler[T]) fail(ctx context.Context, obj T, reason string, cause er
 }
 
 // SetupWithManager registers the reconciler with the manager.
+//
+// Only a generation change reconciles: every reconcile ends in a status write
+// with fresh timestamps, and without the filter that write is itself an event,
+// so an idle resource would be re-planned and re-applied against its target
+// about once a second rather than once per DriftInterval. A spec change bumps
+// the generation, and so does deletion of an object that carries a finalizer.
 func (r *Reconciler[T]) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(r.New()).
+		For(r.New(), builder.WithPredicates(predicate.GenerationChangedPredicate{})).
 		Named(r.Name).
 		WithOptions(r.Options).
 		Complete(r)
