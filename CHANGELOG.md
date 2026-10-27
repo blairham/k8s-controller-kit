@@ -8,6 +8,8 @@ Pre-stable releases (`v0.x.y`) make no API-stability promise -- breaking changes
 
 ## [Unreleased]
 
+## [0.0.2] - 2026-10-26
+
 ### Changed
 
 - **Breaking:** `reconciler.Reconciler.Recorder` is now a
