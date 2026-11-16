@@ -1,6 +1,6 @@
 module github.com/blairham/k8s-controller-kit
 
-go 1.26.10
+go 1.27.4
 
 require (
 	github.com/prometheus/client_golang v1.25.0

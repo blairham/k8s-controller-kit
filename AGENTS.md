@@ -11,7 +11,7 @@ plans the difference from a resource's spec, and either applies it (Enforce)
 or records it in status (Observe).
 
 - Module: `github.com/blairham/k8s-controller-kit`
-- Go 1.26, `controller-runtime` v0.25, `prometheus/client_golang`
+- Go 1.27, `controller-runtime` v0.25, `prometheus/client_golang`
 - A library: no binary, no CRDs, no chart.
 
 ## Releases and consumers
